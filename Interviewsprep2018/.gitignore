@@ -1,0 +1,6 @@
+/bin/
+.idea/vcs.xml
+.classpath
+.project
+.settings/
+/target/
