@@ -11,60 +11,42 @@ public class FindMinCoinsForChangeProblem {
 		findMinCoinsExample();
 
 	}
+
 	
-	static void countWaysToMakeChange() {
-		int arr[] = {1,6,10};
-        int m = arr.length;
-        int n = 5453;
-        System.out.println("Number of ways to make change "+countWaysToMakeChange(arr, n, m-1));
-        
-        
-        
+	static void findMinCoinsExample() {
+		int change = 7;
+		int[] coins = {3,5,1};
+		//System.out.println(minCoinsRec(coins,change));
+		
+		int[]cache = new int[change+1];
+		Arrays.fill(cache, -1);
+		System.out.println(minCoinsWithMemo(coins,change,cache));
+		
+		System.out.println(minCoinsWithDP(coins,change));
+		System.out.println("num of ways to make change: "+ countWaysToMakeAChange(coins,change,coins.length,""));
+		System.out.println("num of ways to make change with DP: "+ countWaysToMakeAChangeWithDP(coins,change));
+		
+		
 	}
 	
-	static void findMinCoinsExample(){
-		int[] coins = {1,6,10};
-		int c = 26;	// 6+6+10+1
-		System.out.println("mini coins are: "+makeChange(coins,c));
-		System.out.println("mini coins are: "+findMinCoinsToMakeChange(coins,c,coins.length-1));
-		
-		int[] cache = new int[c+1];
-		Arrays.fill(cache,-1);
-		System.out.println("mini coins are: "+makeChangeMemo(coins,c,cache));
-		
-		System.out.println("mini coins are: "+makeChangeDP(coins,c));
-		
-		
-		/*
-		long start = System.currentTimeMillis();
-		System.out.println("changes are  "+ findMinCoinsToMakeChange(coins, c,coins.length-1));
-		long end = System.currentTimeMillis();
-		System.out.println("total time took : "+(end-start)+" millis");
-		//System.out.println("changes are  "+ makeChange(coins, c));
-		
-		int[][]cache = new int[c+1][coins.length];
-		for(int[]ch:cache) {
-			Arrays.fill(ch, -1);
-		}
-		start = System.currentTimeMillis();
-		System.out.println("With DP Memo changes are  "+ findMinCoinsToMakeChangeWithMemo(coins, c,coins.length-1,cache));
-		end = System.currentTimeMillis();
-		System.out.println("With DP Memo total time took : "+(end-start)+" millis");*/
-	}
-	
-	static int countWaysToMakeChange(int[] coins, int c,int k) {
-		if(c==0)
-			return 1;
-		if(k<0) {
+	static int minCoinsRec(int[]coins, int change) {
+		if(change==0) {
 			return 0;
 		}
 		
-		if(c-coins[k]<0) {
-			return countWaysToMakeChange(coins, c,k-1);
-		}
+		int minCoins = Integer.MAX_VALUE-1;
 		
-		return countWaysToMakeChange(coins, c,k-1)+(countWaysToMakeChange(coins, c-coins[k],k));
+		for(int coin: coins) {
+			if(change-coin>=0) {
+				int temp = 1 + minCoinsRec(coins,change-coin);
+				if(minCoins>temp) {
+					minCoins = temp;
+				}
+			}
+		}
+		return minCoins;
 	}
+	
 	
 	// Brute force solution. Go through every
 	// combination of coins that sum up to c to
@@ -83,94 +65,109 @@ public class FindMinCoinsForChangeProblem {
 		return Math.min(1+findMinCoinsToMakeChange(coins, c-coins[k], k), findMinCoinsToMakeChange(coins, c, k-1));
 	}
 	
-	static int findMinCoinsToMakeChangeWithMemo(int[] coins, int c, int k,int[][]cache) {
-		if(c==0)
-			return 0;
+	
+	static int countWaysToMakeAChange(int[]coins, int change, int n, String s) {
+		if(change == 0) {
+			System.out.println("Found a way to make change with denominations: "+s);
+			return 1;
+		}
 		
-		if(k<0)
-			return Integer.MAX_VALUE;
-		if(cache[c][k]!=-1) {
-			return cache[c][k];
+		if(n==0) {
+			return 0;
 		}
-		// if coin value is higher than c, that means we cant take this coin in consideration, exclude this coin
-		int result = 0;
-		if(c-coins[k]<0)
-			result = findMinCoinsToMakeChangeWithMemo(coins, c, k-1,cache);		// k-1 means exclude the coin
-		else {
-			result = Math.min(1+findMinCoinsToMakeChangeWithMemo(coins, c-coins[k], k,cache), findMinCoinsToMakeChangeWithMemo(coins, c, k-1,cache));
+		
+		if(change-coins[n-1]<0) {
+			return countWaysToMakeAChange(coins, change, n-1, s);
 		}
-		cache[c][k] = result;
-		return result;
+		
+		return countWaysToMakeAChange(coins,change-coins[n-1],n, s.isEmpty()?(""+coins[n-1]):(s+(", ")+coins[n-1])) 
+				+ countWaysToMakeAChange(coins,change,n-1,s);
 	}
 	
-	
-	static int makeChangeMemo(int[] coins, int change,int[]cache) {
-		if (change == 0) return 0;
+	static int countWaysToMakeAChangeWithDP(int[]coins, int change) {
+		int[][] dp = new int[coins.length+1][change+1];
 		
+		// base condition: when we are given 0 as to make a change, we can always make 0 zero change by {} no coins
+		for(int i=0;i<=coins.length;i++) {
+			dp[i][0] = 1;	// one way with empty set to make a change of 0
+		}
+		
+		for(int i=1;i<=coins.length;i++) {
+			for(int j=1;j<=change;j++) {
+				if(j-coins[i-1]<0) {
+					// exclude the ith coin
+					dp[i][j] = dp[i-1][j];
+				}else {
+					// include and exclude the coin
+					dp[i][j] = (dp[i][j-coins[i-1]])+(dp[i-1][j]);
+				}
+			}
+		}
+		
+		return dp[coins.length][change];
+	}
+	
+	static int minCoinsWithMemo(int[]coins, int change, int[]cache) {
+		if(change==0) {
+			return 0;
+		}
 		if(cache[change]!=-1) {
 			return cache[change];
 		}
-		int minCoins = Integer.MAX_VALUE;
 		
+		int minCoins = Integer.MAX_VALUE-1;
 		
-		// Try removing each coin from the total and
-		// see how many more coins are required
-		for (int coin : coins) {
-			// Skip a coin if it’s value is greater
-			// than the amount remaining
-			if (change - coin >= 0) {
-				int currMinCoins = makeChange(coins, change - coin);
-				if (currMinCoins < minCoins)
-					minCoins = currMinCoins;
-			}
-		}
-		cache[change] = minCoins+1;
-		
-		// Add back the coin removed recursively
-		return cache[change];
-	}
-	
-	static int makeChangeDP(int[] coins, int change) {
-		if (change == 0) return 0;
-		
-		int[] dp = new int[change+1];
-		for(int i = 1; i <= change; i++) {
-			int minCoins = Integer.MAX_VALUE;
-			for (int coin : coins) {
-				// Skip a coin if it’s value is greater
-				// than the amount remaining
-				if (i - coin >= 0) {
-					int currMinCoins = makeChange(coins, i - coin);
-					if (currMinCoins < minCoins)
-						minCoins = currMinCoins;
+		for(int coin: coins) {
+			if(change-coin>=0) {
+				int temp = 1 + minCoinsWithMemo(coins,change-coin,cache);
+				if(minCoins>temp) {
+					minCoins = temp;
 				}
 			}
-			dp[i] = minCoins+1;
 		}
+		
+		cache[change] = minCoins;
+		return minCoins;
+	}
+	
+	static int minCoinsWithDP(int[]coins, int change) {
+		int[] dp = new int[change+1];
+		int[] coinsPicked = new int[change+1];
+		
+		
+		
+		Arrays.fill(dp, Integer.MAX_VALUE-1);
+		Arrays.fill(coinsPicked, -1);
+		
+		
+		dp[0] = 0;	// we can always make 0 change with 0 coins
+		for(int i=0; i<coins.length; i++) {
+			for(int c=0; c<=change; c++) {
+				if(c-coins[i]>=0) {
+					if(dp[c-coins[i]]+1 < dp[c]) {
+						dp[c] = dp[c-coins[i]] + 1;
+						coinsPicked[c] = i;
+					}
+				}
+			}
+		}
+		System.out.print("\nCoins Picked are: {");
+		printCoinsPicked(coinsPicked, coins, change);
+		System.out.println("}");
 		return dp[change];
 	}
 	
-	static int makeChange(int[] coins, int change) {
-		if (change == 0) return 0;
-		
-		
-		int minCoins = Integer.MAX_VALUE;
-		
-		
-		// Try removing each coin from the total and
-		// see how many more coins are required
-		for (int coin : coins) {
-			// Skip a coin if it’s value is greater
-			// than the amount remaining
-			if (change - coin >= 0) {
-				int currMinCoins = makeChange(coins, change - coin);
-				if (currMinCoins < minCoins)
-					minCoins = currMinCoins;
-			}
+	static void printCoinsPicked(int[]coinsPicked,int[]coins, int change) {
+		if(coinsPicked[coinsPicked.length-1]==-1) {
+			System.out.print("No Solution exists!");
+			return;
 		}
-		// Add back the coin removed recursively
-		return minCoins + 1;
+		int c = change;
+		
+		while(c != 0) {
+			int indexOfPickedCoin = coinsPicked[c];
+			System.out.print(coins[indexOfPickedCoin]+ ",");
+			c = c - coins[indexOfPickedCoin];
+		}
 	}
-	
-
 }

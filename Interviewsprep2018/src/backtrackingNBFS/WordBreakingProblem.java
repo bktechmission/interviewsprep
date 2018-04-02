@@ -27,6 +27,8 @@ public class WordBreakingProblem {
 			System.out.println(l);
 		}
 		
+		System.out.println("can we break this word using dic : "+wordBreakCheck(s,dic));
+		
 	}
 	
 	static void wordBreakExample(String s, int start, List<List<String>> finalResult, 
@@ -52,5 +54,28 @@ public class WordBreakingProblem {
 			}
 		}
 	}
-
+	
+	static boolean wordBreakCheck(String s, Set<String> dic) {
+		int[] pos = new int[s.length()+1];
+		
+		Arrays.fill(pos, -1);
+		
+		pos[0] = 0;
+		
+		for(int i=0;i<s.length();i++) {
+			if(pos[i]!=-1) {
+				for(int j=i+1;j<=s.length();j++) {
+					String sub = s.substring(i, j);
+					if(dic.contains(sub)) {
+						pos[j] = i;
+					}
+				}
+			}
+			
+		}
+		
+		return pos[s.length()]!=-1;
+		
+	}
+	
 }

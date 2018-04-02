@@ -1,22 +1,26 @@
 package dynamicprogramming;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
 
 public class DPPractice1 {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		longestCommonSubsequenceExample();
+		generateMiniPalindromePartitions();
 	}
 	
 	static void longestCommonSubsequenceExample(){
 		String s1 = "abcd";
 		String s2 = "gikjlabckloabpdd";
 		
-		int l = findLCS(s1,s2, s1.length(),s2.length());
+		/*int l = findLCS(s1,s2, s1.length(),s2.length());
 		
 		System.out.println("lcs is "+l);
 		
@@ -28,9 +32,154 @@ public class DPPractice1 {
 		
 		countNumberOfWaysToMakeChange();
 		
-		countPathsExample();
+		countPathsExample();*/
 		
-		palindromicExample();
+		palindromicNewExample();
+	}
+	
+	static void palindromicNewExample() {
+		String s = "abcacbdef";
+		System.out.println(logestPalSubstringDP(s));
+		
+		minimumInsertionPalindrome();
+	}
+	static String logestPalSubstringDP(String s) {
+		boolean[][] dp = new boolean[s.length()][s.length()];
+		int m = s.length();
+		for(int i=0;i<m;i++) {
+			dp[i][i] = true;
+		}
+		int maxLen = 1;
+		int maxStart=0;
+		int maxEnd=0;
+		for(int l=2; l<=m;l++) {
+			for(int i=0;i<m-l+1;i++) {
+				int j = i+l-1;
+				if(s.charAt(i)==s.charAt(j)) {
+					if(i+1==j) {
+						dp[i][i] = true;
+					}
+					else {
+						dp[i][j] = dp[i+1][j-1];
+					}
+				}
+				
+				if(dp[i][j] && maxLen<(l)) {
+					maxLen = l;
+					maxStart = i;
+					maxEnd = j;
+				}
+			}
+		}
+		
+		System.out.println("max palindrom is at : "+s.substring(maxStart, maxStart+maxLen));
+		return s.substring(maxStart, maxStart+maxLen);
+		
+	}
+	
+	
+	static void generateMiniPalindromePartitions() {
+		String s = "abcbreraaro";
+		
+		List<String> finalResult = new LinkedList<>();
+		
+		bfsTraversalOfPartitioning(s, finalResult);
+		System.out.println(finalResult);
+		
+	}
+	
+	static class PNode{
+		String word;
+		int level;
+		String partitionedSoFar = "";
+		PNode(String word, int level, String partitionedSoFar){
+			this.word = word;
+			this.level = level;
+			this.partitionedSoFar = partitionedSoFar;
+		}
+	}
+	
+	static void bfsTraversalOfPartitioning(String s, List<String> finalResult) {
+		
+		Queue<PNode> q = new LinkedList<>();
+		
+		q.offer(new PNode(s,0,""));
+		
+		int minLeveFound = Integer.MAX_VALUE;
+		Set<String> triedSet = new HashSet<>();
+		
+		while(!q.isEmpty()) {
+			PNode node = q.poll();
+			String word = node.word;
+			int level = node.level;
+			
+			if(word.length()==0) {
+				if(minLeveFound>level) {
+					String res = node.partitionedSoFar;
+					finalResult.add(res);
+					minLeveFound = level;
+					continue;
+				}
+			}
+			
+			if(triedSet.contains(word) || minLeveFound<level) {
+				continue;
+			}
+			
+			triedSet.add(word);
+			
+			for(int i=1; i<=word.length(); i++) {
+				
+				String sub = word.substring(0, i);
+				
+				System.out.println("sub is "+sub);
+				if(isPalindrome(sub,0,sub.length()-1)) {
+					System.out.println("pal sub is "+sub);
+					q.offer(new PNode(word.substring(i), level+1, node.partitionedSoFar+" "+sub));
+				}
+			}
+		}
+	}
+	
+	static boolean isPalindrome(String word, int s, int e) {
+		int l = s;
+		int r = e;
+		while(l<r) {
+			if(word.charAt(l) != word.charAt(r)) {
+				return false;
+			}
+			l++;
+			r--;
+		}
+		return true;
+	}
+	
+	static void minimumInsertionPalindrome() {
+		String s = "abcd";
+		int maxOverallj = Integer.MIN_VALUE;
+		for(int i=s.length()/2;i>=0;i--){
+			int j1 = expandAroundCenterNew1(s,i,i);
+			int j2 = expandAroundCenterNew1(s,i,i+1);
+			int maxj = Math.max(j1, j2);
+			
+			maxOverallj = Math.max(maxOverallj, maxj);
+		}
+		StringBuilder sb = new StringBuilder(s.substring(maxOverallj+1));
+		String minPalindrome = sb.reverse().toString() + s;
+		System.out.println("Min String is "+minPalindrome);
+	}
+	
+	static int expandAroundCenterNew1(String s, int i, int j) {
+		int l = i;
+		int r = j;
+		while(l>=0&&r<s.length()&& s.charAt(l)==s.charAt(r)) {
+			l--;
+			j++;
+		}
+		if(l<0) {
+			return r;
+		}
+		return Integer.MIN_VALUE;
 	}
 	
 	static void countPathsExample() {

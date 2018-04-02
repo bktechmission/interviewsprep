@@ -98,7 +98,7 @@ public class MatrixChainMultiplicationProblem {
 				int j = i+l-1;
 				dp[i][j] = Integer.MAX_VALUE;
 				for(int k=i;k<j;k++) {
-					int temp = dp[i][k] + dp[k+1][j]+p[i-1]*p[k]*p[j];
+					int temp = (dp[i][k] + dp[k+1][j])+ (p[i-1]*p[k]*p[j]);
 					if(temp<dp[i][j])
 					{
 						dp[i][j] = temp;
